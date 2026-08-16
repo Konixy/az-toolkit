@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-"""Shared build engine for the RX3 runtime CLI and desktop application."""
+"""Shared build engine for the AZ runtime CLI and desktop application."""
 
 from __future__ import annotations
 
@@ -440,7 +440,7 @@ def build_runtime(
     notify = progress or (lambda _message: None)
 
     if not key_path.is_file():
-        raise ValueError("Select an existing RX3 key file")
+        raise ValueError("Select an existing AZ encryption key file")
     if not output_directory.is_dir():
         raise ValueError("Select an existing output folder or mounted USB drive")
 

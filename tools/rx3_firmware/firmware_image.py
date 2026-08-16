@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Inspect, decrypt, encrypt, and build XDJ-RX3 firmware images.
+"""Inspect, decrypt, encrypt, and build Pioneer/AlphaTheta firmware images.
 
-The format follows the official GPL sources in decrypt_update.sh and the
-cryptoloop implementation used by util-linux-ng 2.14.2:
+Two on-disk shapes exist:
+
+RX3-style cryptoloop (historical USB autoexec.bin, and RX3 .UPD files):
 
     cat /usr/local/pdj/aes256.key | losetup -e aes -p 0 DEVICE IMAGE
 
-Update container:
     [encrypted payload, aligned to 512 bytes]
     [model and version field, 12 bytes]
     [CRC32 of encrypted payload, little-endian, 4 bytes]
 
-The payload is an ISO 9660 filesystem encrypted independently per 512-byte
-sector with AES-256-CBC. The IV is the sector index encoded as a 32-bit
-little-endian integer followed by 12 zero bytes.
+    AES-256-CBC per 512-byte sector. IV is the sector index as a 32-bit
+    little-endian integer followed by 12 zero bytes.
+
+XDJ-AZ .UPD files (firmware 1.04+): LUKS1 AES-XTS-plain64, SHA-256, then the
+same 16-byte model/version/CRC32 trailer. The observed model id is `XDJ-XZN`.
+This module can describe that header. It does not brute-force the LUKS
+passphrase, and the toolkit never flashes a .UPD.
 """
 
 import argparse
@@ -30,7 +34,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 SECTOR = 512
 TRAILER = 16
-MODEL = b"XDJ-RX3"
+MODEL = b"XDJ-XZN"
+LUKS_MAGIC = b"LUKS\xba\xbe"
 ISO_BLOCK = 2048
 ISO_PADDING_BLOCKS = 150
 
@@ -74,23 +79,66 @@ def split(blob):
     return body, model, version, stored, actual
 
 
-def build(payload, version):
-    """Append the RX3 model/version field and encrypted-payload CRC32."""
+def build(payload, version, model=MODEL):
+    """Append the model/version field and encrypted-payload CRC32."""
+    if not isinstance(model, bytes):
+        model = model.encode("ascii")
+    if len(model) != 7:
+        raise ValueError(f"model must be 7 bytes, got {model!r}")
     encoded_version = version.encode("ascii")
-    trailer = MODEL + encoded_version.ljust(5, b"\0")
+    trailer = model + encoded_version.ljust(5, b"\0")
     if len(trailer) != 12:
         raise ValueError(f"version is too long: {version!r}")
     crc = zlib.crc32(payload) & 0xFFFFFFFF
     return payload + trailer + struct.pack("<I", crc)
 
 
+def luks_info(blob):
+    """Return a LUKS1 summary from an update image, or None if it is not LUKS."""
+    if len(blob) < TRAILER + 208:
+        return None
+    body = blob[:-TRAILER]
+    if body[:6] != LUKS_MAGIC:
+        return None
+    version = struct.unpack(">H", body[6:8])[0]
+    cipher = body[8:40].split(b"\0", 1)[0].decode("ascii", "replace")
+    mode = body[40:72].split(b"\0", 1)[0].decode("ascii", "replace")
+    hash_spec = body[72:104].split(b"\0", 1)[0].decode("ascii", "replace")
+    payload_offset = struct.unpack(">I", body[104:108])[0]
+    uuid = body[168:208].split(b"\0", 1)[0].decode("ascii", "replace")
+    active_slots = 0
+    for index in range(8):
+        slot_active = struct.unpack(">I", body[208 + index * 48:212 + index * 48])[0]
+        if slot_active == 0x00AC71F3:
+            active_slots += 1
+    return {
+        "version": version,
+        "cipher": cipher,
+        "mode": mode,
+        "hash": hash_spec,
+        "payload_offset": payload_offset,
+        "uuid": uuid,
+        "active_slots": active_slots,
+    }
+
+
 def cmd_verify(args):
-    body, model, version, stored, actual = split(pathlib.Path(args.file).read_bytes())
+    blob = pathlib.Path(args.file).read_bytes()
+    body, model, version, stored, actual = split(blob)
     print(f"Model          : {model.decode('ascii', 'replace')}")
     print(f"Version        : {version}")
     print(f"Payload        : {len(body):,} bytes ({len(body) // SECTOR} sectors)")
     print(f"Stored CRC32   : 0x{stored:08X}")
     print(f"Calculated CRC : 0x{actual:08X} -> {'OK' if stored == actual else 'FAILED'}")
+    info = luks_info(blob)
+    if info:
+        print(
+            f"LUKS           : version {info['version']} "
+            f"{info['cipher']}-{info['mode']} {info['hash']}, "
+            f"{info['active_slots']} keyslot(s), uuid {info['uuid']}"
+        )
+        print("Note           : AZ update images are LUKS; this tool will not flash them.")
+        return 0 if stored == actual else 1
     if not args.key:
         return 0 if stored == actual else 1
 

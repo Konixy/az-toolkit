@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""List and build versioned RX3 runtime modules."""
+"""List and build versioned XDJ-AZ runtime modules."""
 
 import argparse
 import pathlib
@@ -17,10 +17,10 @@ def main() -> int:
     commands = parser.add_subparsers(dest="command", required=True)
 
     command = commands.add_parser("list", help="list selectable modules")
-    command.add_argument("--firmware", default="1.19")
+    command.add_argument("--firmware", default="1.30")
 
     command = commands.add_parser("build", help="build autoexec.bin")
-    command.add_argument("--firmware", default="1.19")
+    command.add_argument("--firmware", default="1.30")
     command.add_argument("--patch", action="append", dest="patches")
     command.add_argument("--key", required=True, type=pathlib.Path)
     command.add_argument("--output", required=True, type=pathlib.Path)

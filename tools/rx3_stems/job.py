@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-"""Generation pipeline: separate a playlist locally and write `RX3_STEMS`."""
+"""Generation pipeline: separate a playlist locally and write `AZ_STEMS`."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from tools.rx3_stems.sidecar import write_sidecar
 
 
 MANIFEST_NAME = "rx3-stems-manifest.json"
-OUTPUT_NAME = "RX3_STEMS"
+OUTPUT_NAME = "AZ_STEMS"
 SIDECAR_SUFFIX = ".rx3stem"
 # A shorter file cannot hold the sidecar header, so it is treated as incomplete.
 MINIMUM_SIDECAR_BYTES = 64
