@@ -34,7 +34,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld file ffmpeg
+          sudo apt-get install -y file ffmpeg
 
       - name: Install Python dependencies
         run: python -m pip install -r requirements.txt
@@ -43,35 +43,10 @@ jobs:
         run: make hook test preflight
 
 
-  arm-hook:
-    name: Build ARM runtime hook
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install ARM build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang lld file
-
-      - name: Compile firmware 1.19 hook
-        run: make hook FIRMWARE=1.19
-
-      - name: Upload ARM runtime hook
-        uses: actions/upload-artifact@v4
-        with:
-          name: runtime-assets-arm-hook
-          path: build/librx3_core.so
-          if-no-files-found: error
-
-
   desktop-app:
     name: Desktop app (${{ matrix.platform }})
     needs:
       - source
-      - arm-hook
 
     strategy:
       fail-fast: false
@@ -80,31 +55,31 @@ jobs:
         include:
           - runner: ubuntu-24.04
             platform: Linux x64
-            artifact: xdj-rx3-toolkit-linux-x64
-            target: dist/XDJ-RX3 Toolkit
-            executable: dist/XDJ-RX3 Toolkit
-            archive: XDJ-RX3-Toolkit-Linux-x64.tar.gz
+            artifact: xdj-az-toolkit-linux-x64
+            target: dist/XDJ-AZ Toolkit
+            executable: dist/XDJ-AZ Toolkit
+            archive: XDJ-AZ-Toolkit-Linux-x64.tar.gz
 
           - runner: windows-2025
             platform: Windows x64
-            artifact: xdj-rx3-toolkit-windows-x64
-            target: dist/XDJ-RX3 Toolkit.exe
-            executable: dist/XDJ-RX3 Toolkit.exe
-            archive: XDJ-RX3-Toolkit-Windows-x64.zip
+            artifact: xdj-az-toolkit-windows-x64
+            target: dist/XDJ-AZ Toolkit.exe
+            executable: dist/XDJ-AZ Toolkit.exe
+            archive: XDJ-AZ-Toolkit-Windows-x64.zip
 
           - runner: macos-15-intel
             platform: macOS Intel
-            artifact: xdj-rx3-toolkit-macos-intel
-            target: dist/XDJ-RX3 Toolkit.app
-            executable: dist/XDJ-RX3 Toolkit.app/Contents/MacOS/XDJ-RX3 Toolkit
-            archive: XDJ-RX3-Toolkit-macOS-Intel.zip
+            artifact: xdj-az-toolkit-macos-intel
+            target: dist/XDJ-AZ Toolkit.app
+            executable: dist/XDJ-AZ Toolkit.app/Contents/MacOS/XDJ-AZ Toolkit
+            archive: XDJ-AZ-Toolkit-macOS-Intel.zip
 
           - runner: macos-latest
             platform: macOS Apple Silicon
-            artifact: xdj-rx3-toolkit-macos-apple-silicon
-            target: dist/XDJ-RX3 Toolkit.app
-            executable: dist/XDJ-RX3 Toolkit.app/Contents/MacOS/XDJ-RX3 Toolkit
-            archive: XDJ-RX3-Toolkit-macOS-Apple-Silicon.zip
+            artifact: xdj-az-toolkit-macos-apple-silicon
+            target: dist/XDJ-AZ Toolkit.app
+            executable: dist/XDJ-AZ Toolkit.app/Contents/MacOS/XDJ-AZ Toolkit
+            archive: XDJ-AZ-Toolkit-macOS-Apple-Silicon.zip
 
     runs-on: ${{ matrix.runner }}
 
@@ -117,24 +92,6 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-
-      - name: Install Linux build dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang lld file
-
-      - name: Install macOS build dependencies
-        if: runner.os == 'macOS'
-        run: |
-          brew install lld
-          echo "$(brew --prefix lld)/bin" >> "$GITHUB_PATH"
-
-      - name: Download ARM runtime hook
-        uses: actions/download-artifact@v4
-        with:
-          name: runtime-assets-arm-hook
-          path: prebuilt
 
       - name: Install release dependencies
         run: python -m pip install -r requirements-release.txt
@@ -149,8 +106,6 @@ jobs:
         run: python apps/rx3-toolbox/main.py --self-test
 
       - name: Build desktop application
-        env:
-          RX3_PREBUILT_HOOK: ${{ github.workspace }}/prebuilt/librx3_core.so
         run: pyinstaller --noconfirm --clean apps/rx3-toolbox/rx3_toolbox.spec
 
       - name: Check packaged macOS libraries
@@ -194,7 +149,7 @@ jobs:
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: xdj-rx3-toolkit-*
+          pattern: xdj-az-toolkit-*
           path: release
           merge-multiple: true
 
@@ -228,4 +183,4 @@ jobs:
           release/*
           --verify-tag
           --notes-file notes.md
-          --title "XDJ-RX3 Toolkit ${GITHUB_REF_NAME}"
+          --title "XDJ-AZ Toolkit ${GITHUB_REF_NAME}"
