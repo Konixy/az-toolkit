@@ -1,0 +1,15 @@
+{
+  "id": "probe",
+  "name": "Safe inventory (required first run)",
+  "description": "Writes what the stick can see — architecture, mounts, player binary, SHA-1 — and changes nothing. Keep this on until a session log from your AZ exists. It is the only way to map rbp without risking a write.",
+  "firmware": "1.30",
+  "default": true,
+  "order": 1,
+  "runtime_directory": "probe",
+  "namespace": "probe",
+  "requires": [],
+  "conflicts": [],
+  "files": [
+    {"source": "module.sh", "target": "module.sh", "executable": false}
+  ]
+}

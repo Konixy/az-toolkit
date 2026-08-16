@@ -1,0 +1,15 @@
+{
+  "id": "beatjump-32bars",
+  "name": "32-beat Beat Jump",
+  "description": "Beat Jump pads 7 and 8 become -32 and +32 instead of -8 and +8. Inactive on 1.30 until rbp offsets are mapped from a probe log — selecting it cannot write the player binary yet.",
+  "firmware": "1.30",
+  "default": false,
+  "order": 10,
+  "runtime_directory": "beatjump-32bars",
+  "namespace": "beatjump_32bars",
+  "requires": ["decoder-sleep"],
+  "conflicts": [],
+  "files": [
+    {"source": "module.sh", "target": "module.sh", "executable": false}
+  ]
+}

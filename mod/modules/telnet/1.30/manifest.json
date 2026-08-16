@@ -1,0 +1,15 @@
+{
+  "id": "telnet",
+  "name": "Telnet access",
+  "description": "Starts BusyBox telnetd for inspection (USB Ethernet, typically 169.254.x.y). Off by default. Isolated link only. The AZ GPL overlay also ships dropbear; this module does not enable SSH.",
+  "firmware": "1.30",
+  "default": false,
+  "order": 90,
+  "runtime_directory": "telnet",
+  "namespace": "telnet",
+  "requires": [],
+  "conflicts": [],
+  "files": [
+    {"source": "module.sh", "target": "module.sh", "executable": false}
+  ]
+}

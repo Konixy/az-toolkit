@@ -1,0 +1,15 @@
+{
+  "id": "instant-hotcue",
+  "name": "Instant Hot Cue (stopped deck)",
+  "description": "When a track is not already playing, triggering a Hot Cue jumps immediately instead of waiting for the beat grid. Playing decks keep stock quantize. Inactive on 1.30 until rbp offsets are mapped from a probe log — selecting it cannot write the player binary yet.",
+  "firmware": "1.30",
+  "default": true,
+  "order": 20,
+  "runtime_directory": "instant-hotcue",
+  "namespace": "instant_hotcue",
+  "requires": [],
+  "conflicts": [],
+  "files": [
+    {"source": "module.sh", "target": "module.sh", "executable": false}
+  ]
+}

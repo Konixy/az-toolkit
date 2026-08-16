@@ -1,0 +1,16 @@
+{
+  "id": "decoder-sleep",
+  "name": "Faster decoder polling",
+  "description": "Asks the player to check decoded audio more often after seeks and jumps (UDP debug console, four decks). Off by default on 1.30 until a probe log shows port 20000. Does not rewrite rbp.",
+  "firmware": "1.30",
+  "default": false,
+  "order": 8,
+  "runtime_directory": "decoder-sleep",
+  "namespace": "decoder_sleep",
+  "requires": [],
+  "conflicts": [],
+  "files": [
+    {"source": "module.sh", "target": "module.sh", "executable": false},
+    {"source": "apply.sh", "target": "apply.sh", "executable": true}
+  ]
+}

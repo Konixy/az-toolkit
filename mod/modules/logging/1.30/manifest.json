@@ -1,0 +1,15 @@
+{
+  "id": "logging",
+  "name": "Session logging",
+  "description": "Writes AZ_RUNTIME/session.txt and the player's output to the drive. Keep this on for the first AZ runs so the probe log survives. ALWAYS EJECT THE USB DRIVE WHEN THIS IS ON, NEVER PULL IT OUT: IT CAN CORRUPT IT.",
+  "firmware": "1.30",
+  "default": true,
+  "order": 95,
+  "runtime_directory": "logging",
+  "namespace": "logging",
+  "requires": [],
+  "conflicts": [],
+  "files": [
+    {"source": "module.sh", "target": "module.sh", "executable": false}
+  ]
+}

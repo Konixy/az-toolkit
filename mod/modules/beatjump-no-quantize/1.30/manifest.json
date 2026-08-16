@@ -1,0 +1,15 @@
+{
+  "id": "beatjump-no-quantize",
+  "name": "Immediate Beat Jump",
+  "description": "Repeated Beat Jumps fire at once instead of waiting for the grid. Inactive on 1.30 until rbp offsets are mapped from a probe log — selecting it cannot write the player binary yet.",
+  "firmware": "1.30",
+  "default": false,
+  "order": 12,
+  "runtime_directory": "beatjump-no-quantize",
+  "namespace": "beatjump_no_quantize",
+  "requires": ["decoder-sleep"],
+  "conflicts": [],
+  "files": [
+    {"source": "module.sh", "target": "module.sh", "executable": false}
+  ]
+}

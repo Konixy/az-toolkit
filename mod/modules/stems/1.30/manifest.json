@@ -1,0 +1,19 @@
+{
+  "id": "stems",
+  "name": "Stems (sidecar prep)",
+  "description": "Looks for AZ_STEMS/*.rx3stem on the stick. On-device mixing and pad takeover are not mapped for AZ 1.30 yet, so this only publishes the folder for a future hook. Prepare stems on the computer as usual.",
+  "firmware": "1.30",
+  "default": false,
+  "order": 40,
+  "runtime_directory": "stems",
+  "namespace": "stems",
+  "requires": [],
+  "conflicts": [],
+  "files": [
+    {
+      "source": "module.sh",
+      "target": "module.sh",
+      "executable": false
+    }
+  ]
+}
