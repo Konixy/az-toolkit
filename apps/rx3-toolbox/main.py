@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""XDJ-RX3 Toolkit: the USB runtime builder and the vocal stem generator.
+"""XDJ-AZ Toolkit: the USB runtime builder and the vocal stem generator.
 
 Both halves prepare the same USB drive for the same player, so they are one
 window with one tab each rather than two applications to download, update, and
@@ -26,7 +26,7 @@ import stem_studio
 import theme
 
 
-PRODUCT = "XDJ-RX3 Toolkit"
+PRODUCT = "XDJ-AZ Toolkit"
 
 
 class ToolboxApp(tk.Tk):

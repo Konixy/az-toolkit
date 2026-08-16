@@ -8,9 +8,10 @@ import sys
 
 
 repository = pathlib.Path(SPECPATH).parents[1]
-# The USB runtime half carries its module manifests and the ARM hook. The stems
-# half provisions audio-separator, PyTorch, and FFmpeg into a per-user
-# environment on first launch, so it contributes only its notices.
+# The USB runtime half carries its module manifests. A prebuilt hook is
+# optional: firmware 1.30 has none. The stems half provisions audio-separator,
+# PyTorch, and FFmpeg into a per-user environment on first launch, so it
+# contributes only its notices.
 resources = [
     (str(repository / "LICENSE"), "."),
     (str(repository / "THIRD_PARTY_NOTICES.md"), "."),
@@ -39,8 +40,9 @@ for manifest in (repository / "mod/modules").glob("**/manifest.json"):
         source_destination = f"resources/{source.parent.relative_to(repository).as_posix()}"
         resources.append((str(source), source_destination))
 
-prebuilt_hook = pathlib.Path(os.environ["RX3_PREBUILT_HOOK"])
-resources.append((str(prebuilt_hook), "resources/prebuilt"))
+prebuilt_hook = pathlib.Path(os.environ["RX3_PREBUILT_HOOK"]) if os.environ.get("RX3_PREBUILT_HOOK") else None
+if prebuilt_hook and prebuilt_hook.is_file():
+    resources.append((str(prebuilt_hook), "resources/prebuilt"))
 
 application_directory = repository / "apps/rx3-toolbox"
 analysis = Analysis(
@@ -77,7 +79,7 @@ if sys.platform == "darwin":
         analysis.scripts,
         [],
         exclude_binaries=True,
-        name="XDJ-RX3 Toolkit",
+        name="XDJ-AZ Toolkit",
         debug=False,
         bootloader_ignore_signals=False,
         strip=False,
@@ -90,13 +92,13 @@ if sys.platform == "darwin":
         analysis.datas,
         strip=False,
         upx=False,
-        name="XDJ-RX3 Toolkit",
+        name="XDJ-AZ Toolkit",
     )
     application = BUNDLE(
         collected,
-        name="XDJ-RX3 Toolkit.app",
+        name="XDJ-AZ Toolkit.app",
         icon=None,
-        bundle_identifier="org.xdjrx3.toolkit",
+        bundle_identifier="org.xdjaz.toolkit",
     )
 else:
     executable = EXE(
@@ -105,7 +107,7 @@ else:
         analysis.binaries,
         analysis.datas,
         [],
-        name="XDJ-RX3 Toolkit",
+        name="XDJ-AZ Toolkit",
         debug=False,
         bootloader_ignore_signals=False,
         strip=False,

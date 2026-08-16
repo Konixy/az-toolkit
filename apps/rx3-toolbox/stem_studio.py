@@ -951,7 +951,7 @@ class StemStudioPane(ttk.Frame):
         self.start_button.configure(state="disabled")
         self.cancel_button.configure(state="normal")
         self.reveal_button.configure(state="disabled")
-        self.log(f"{output / 'RX3_STEMS'} · {self.settings.model} · {acceleration.label}")
+        self.log(f"{output / 'AZ_STEMS'} · {self.settings.model} · {acceleration.label}")
         threading.Thread(target=self._job_worker, daemon=True).start()
 
     def _job_worker(self) -> None:
@@ -1033,7 +1033,7 @@ class StemStudioPane(ttk.Frame):
         self.status.set(summary)
         messagebox.showinfo(
             "Done",
-            f"{summary}.\n\nCopy RX3_STEMS folder to the root of your Rekordbox USB drive if you chose another location.",
+            f"{summary}.\n\nCopy AZ_STEMS folder to the root of your Rekordbox USB drive if you chose another location.",
             parent=window,
         )
 
@@ -1073,8 +1073,8 @@ def self_test() -> None:
         if collection.track_count != 1 or len(collection.playlists) != 1:
             raise RuntimeError("Embedded Rekordbox parsing is broken")
         output = root / "export"
-        (output / "RX3_STEMS").mkdir(parents=True)
-        (output / "RX3_STEMS/Artist - Track.rx3stem").write_bytes(b"x" * 128)
+        (output / "AZ_STEMS").mkdir(parents=True)
+        (output / "AZ_STEMS/Artist - Track.rx3stem").write_bytes(b"x" * 128)
         state = StemJob(
             provisioning.detect(), collection, collection.playlists[0], output
         ).run()

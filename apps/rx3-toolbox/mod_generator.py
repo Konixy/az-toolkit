@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""The USB runtime pane: build a versioned RX3 `autoexec.bin`."""
+"""The USB runtime pane: build a versioned XDJ-AZ `autoexec.bin`."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class ModGeneratorPane(ttk.Frame):
         self.root_resources = repository_root()
         self.key_path = tk.StringVar()
         self.output_path = tk.StringVar()
-        self.status = tk.StringVar(value="Choose the patches, your RX3 key, and the USB drive.")
+        self.status = tk.StringVar(value="Choose the modules, your AZ key, and the USB drive.")
         self.firmware = tk.StringVar()
         self.patch_variables: dict[str, tk.BooleanVar] = {}
         self._patches: list = []
@@ -44,7 +44,7 @@ class ModGeneratorPane(ttk.Frame):
         theme.follow_width(self)
         versions = available_versions(self.root_resources)
         if not versions:
-            raise RuntimeError("No versioned RX3 patches were found")
+            raise RuntimeError("No versioned AZ patches were found")
         self.firmware.set(versions[-1])
         self.version_box.configure(values=versions)
         self._load_patches()
@@ -60,7 +60,7 @@ class ModGeneratorPane(ttk.Frame):
         )
         theme.wrapping(ttk.Label(
             container,
-            text="Nothing is installed permanently on the player. If anything goes wrong, remove the USB and power cycle the system to get back to normal.",
+            text="Nothing is flashed. The first AZ build only inventories the player. If anything goes wrong, remove the USB and power cycle to get back to stock.",
         ), inset=PANE_INSET).grid(row=1, column=0, sticky="w", pady=(4, 20))
 
         version_row = ttk.Frame(container)
@@ -79,7 +79,7 @@ class ModGeneratorPane(ttk.Frame):
         self.patch_frame.columnconfigure(0, weight=1)
 
         ttk.Separator(container).grid(row=5, column=0, sticky="ew", pady=18)
-        theme.path_row(container, 6, "RX3 encryption key", self.key_path, self._choose_key)
+        theme.path_row(container, 6, "AZ encryption key", self.key_path, self._choose_key)
         theme.path_row(container, 7, "USB drive or output folder", self.output_path, self._choose_output)
 
         theme.wrapping(ttk.Label(
@@ -92,7 +92,7 @@ class ModGeneratorPane(ttk.Frame):
         theme.wrapping(
             ttk.Label(container, textvariable=self.status), inset=PANE_INSET
         ).grid(row=10, column=0, sticky="w", pady=(8, 16))
-        self.build_button = ttk.Button(container, text="Mod your RX3 !", command=self._start_build)
+        self.build_button = ttk.Button(container, text="Build for your AZ", command=self._start_build)
         self.build_button.grid(row=11, column=0, sticky="ew", ipady=8)
 
     def _load_patches(self) -> None:
@@ -174,7 +174,7 @@ class ModGeneratorPane(ttk.Frame):
                 variable.set(patch.patch_id in needed)
 
     def _choose_key(self) -> None:
-        selected = filedialog.askopenfilename(title="Choose the RX3 encryption key")
+        selected = filedialog.askopenfilename(title="Choose the AZ encryption key")
         if selected:
             self.key_path.set(selected)
 
@@ -202,7 +202,7 @@ class ModGeneratorPane(ttk.Frame):
             return
         if not key.is_file():
             messagebox.showerror(
-                "Key not found", "Choose an existing RX3 encryption key file.", parent=window
+                "Key not found", "Choose an existing AZ encryption key file.", parent=window
             )
             return
         if not output.is_dir():
@@ -255,7 +255,9 @@ class ModGeneratorPane(ttk.Frame):
         messagebox.showinfo(
             "Mods are ready",
             f"The mod file was written to:\n{result.output}\n\n"
-            "Eject the USB drive cleanly before inserting it into the RX3.",
+            "Eject the USB drive cleanly before inserting it into the AZ.\n"
+            "Power the player on first, then insert the stick. Pulling the "
+            "stick and power cycling returns the unit to stock.",
             parent=window,
         )
 
