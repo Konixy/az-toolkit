@@ -123,8 +123,8 @@ class JobTests(unittest.TestCase):
             xml = write_export(root, [("1", "Track", "Artist", audio)])
             collection = parse_collection(xml)
             output = root / "export"
-            (output / "RX3_STEMS").mkdir(parents=True)
-            (output / "RX3_STEMS/Artist - Track.rx3stem").write_bytes(b"x" * 128)
+            (output / "AZ_STEMS").mkdir(parents=True)
+            (output / "AZ_STEMS/Artist - Track.rx3stem").write_bytes(b"x" * 128)
 
             state = StemJob(self.runtime(), collection, collection.playlists[0], output).run()
             self.assertEqual(state.state, "done")
@@ -140,7 +140,7 @@ class JobTests(unittest.TestCase):
             xml = write_export(root, [("1", "Air Force Blanche", "Gims", audio)])
             collection = parse_collection(xml)
             output = root / "export"
-            stems = output / "RX3_STEMS"
+            stems = output / "AZ_STEMS"
             stems.mkdir(parents=True)
             # Named as the deck will ask for it, not as the library holds it.
             existing = stems / "Air Force Blanche - Gims, Jul (Extended Mix .rx3stem"
@@ -167,8 +167,8 @@ class JobTests(unittest.TestCase):
             ])
             collection = parse_collection(xml)
             output = root / "export"
-            (output / "RX3_STEMS").mkdir(parents=True)
-            (output / f"RX3_STEMS/{export_stem(sources[0].stem)}.rx3stem").write_bytes(b"x" * 128)
+            (output / "AZ_STEMS").mkdir(parents=True)
+            (output / f"AZ_STEMS/{export_stem(sources[0].stem)}.rx3stem").write_bytes(b"x" * 128)
 
             state = StemJob(self.runtime(), collection, collection.playlists[0], output).run()
             self.assertEqual(len(state.results), 1)
@@ -186,8 +186,8 @@ class JobTests(unittest.TestCase):
             ])
             collection = parse_collection(xml)
             output = root / "export"
-            (output / "RX3_STEMS").mkdir(parents=True)
-            (output / "RX3_STEMS/Artist - Track.rx3stem").write_bytes(b"x" * 128)
+            (output / "AZ_STEMS").mkdir(parents=True)
+            (output / "AZ_STEMS/Artist - Track.rx3stem").write_bytes(b"x" * 128)
 
             state = StemJob(self.runtime(), collection, collection.playlists[0], output).run()
             self.assertEqual(state.state, "done")
@@ -978,7 +978,7 @@ class TrackPositionTests(unittest.TestCase):
             root = pathlib.Path(directory)
             collection = self.playlist(root, 3)
             output = root / "export"
-            stems = output / "RX3_STEMS"
+            stems = output / "AZ_STEMS"
             stems.mkdir(parents=True)
             for index in range(3):
                 (stems / f"Artist - Track {index}.rx3stem").write_bytes(b"x" * 128)

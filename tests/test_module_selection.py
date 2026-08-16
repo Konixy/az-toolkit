@@ -60,9 +60,8 @@ class SelectionPropagationTests(unittest.TestCase):
 
         self.clear()
         self.set("stems", True)
-        self.assertIn("core", self.ticked())
+        self.assertEqual(self.ticked(), {"stems"})
 
-        # A module that requires nothing stays on its own.
         self.clear()
         self.set("decoder-sleep", True)
         self.assertEqual(self.ticked(), {"decoder-sleep"})
@@ -79,41 +78,13 @@ class SelectionPropagationTests(unittest.TestCase):
         self.assertNotIn("beatjump-no-quantize", remaining)
         self.assertNotIn("decoder-sleep", remaining)
 
-    def test_core_follows_its_dependents_and_is_never_ticked_alone(self):
-        self.clear()
-        self.assertFalse(self.variables["core"].get())
-
-        self.set("keyshift", True)
-        self.assertTrue(self.variables["core"].get())
-
-        self.set("stems", True)
-        self.set("keyshift", False)
-        self.assertTrue(self.variables["core"].get(), "stems still needs the core")
-
-        self.set("stems", False)
-        self.assertFalse(self.variables["core"].get())
-
-    def test_internal_modules_are_disabled_in_the_interface(self):
-        internal = {
-            patch.patch_id for patch in discover_patches() if not patch.selectable
-        }
-        self.assertTrue(internal, "this test assumes at least one internal module")
-        states = {}
-        for child in self.pane.patch_frame.winfo_children():
-            if isinstance(child, tk.ttk.Checkbutton):
-                states[str(child.cget("text"))] = str(child.cget("state"))
-        disabled = {text for text, state in states.items() if state == "disabled"}
-        self.assertTrue(
-            any(text.endswith("(required)") for text in disabled),
-            f"an internal module must be shown but not tickable; saw {states}",
-        )
-        # resolve_patches rejects an internal module as a direct selection, so
-        # what the pane hands the resolver must exclude it even when ticked.
-        self.set("stems", True)
-        self.assertTrue(self.variables["core"].get())
-        self.assertFalse(internal & {
-            patch.patch_id for patch in discover_patches() if patch.selectable
-        })
+    def test_probe_and_logging_default_on_and_are_independent(self):
+        self.assertTrue(self.variables["probe"].get())
+        self.assertTrue(self.variables["logging"].get())
+        self.set("probe", False)
+        self.assertTrue(self.variables["logging"].get())
+        self.set("logging", False)
+        self.assertFalse(self.variables["probe"].get())
 
 
 class ClosureTests(unittest.TestCase):
@@ -133,7 +104,7 @@ class ClosureTests(unittest.TestCase):
             {"decoder-sleep", "beatjump-32bars", "beatjump-no-quantize"},
         )
         self.assertEqual(
-            dependent_closure(definitions, ["core"]), {"core", "keyshift", "stems"}
+            dependent_closure(definitions, ["probe"]), {"probe"}
         )
         self.assertEqual(required_closure(definitions, ["nope"]), set())
         self.assertEqual(dependent_closure(definitions, ["nope"]), set())

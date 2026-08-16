@@ -30,12 +30,29 @@ class FirmwareImageTests(unittest.TestCase):
 
     def test_container_crc_and_metadata(self):
         body = bytes(1024)
-        blob = firmware_image.build(body, "1.19")
+        blob = firmware_image.build(body, "1.30")
         parsed, model, version, stored, actual = firmware_image.split(blob)
         self.assertEqual(parsed, body)
-        self.assertEqual(model, b"XDJ-RX3")
-        self.assertEqual(version, "1.19")
+        self.assertEqual(model, b"XDJ-XZN")
+        self.assertEqual(version, "1.30")
         self.assertEqual(stored, actual)
+
+    def test_luks_header_is_detected_without_decrypting(self):
+        header = bytearray(4096)
+        header[0:6] = firmware_image.LUKS_MAGIC
+        header[6:8] = b"\x00\x01"
+        header[8:11] = b"aes"
+        header[40:51] = b"xts-plain64"
+        header[72:78] = b"sha256"
+        header[104:108] = b"\x00\x00\x10\x00"
+        header[168:176] = b"testuuid"
+        header[208:212] = b"\x00\xac\x71\xf3"
+        blob = firmware_image.build(bytes(header) + bytes(512), "1.30")
+        info = firmware_image.luks_info(blob)
+        self.assertIsNotNone(info)
+        self.assertEqual(info["cipher"], "aes")
+        self.assertEqual(info["mode"], "xts-plain64")
+        self.assertEqual(info["active_slots"], 1)
 
     def test_autoexec_iso_metadata(self):
         plain = bytearray(68 * firmware_image.SECTOR)

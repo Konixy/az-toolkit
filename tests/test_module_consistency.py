@@ -2,8 +2,7 @@
 """Cross-checks for facts that are stated twice in two different languages.
 
 Each duplication below is deliberate: the device applies patches from shell at
-boot, while the offline patcher rewrites a file on a workstation, and the
-sidecar container is written by Python but parsed by C on the deck. Nothing in
+boot, while the offline patcher rewrites a file on a workstation. Nothing in
 the build makes the two copies agree, so these tests do.
 
 Modules are located through their manifest rather than by path, so moving a
@@ -11,7 +10,6 @@ module directory does not silently disable a guard.
 """
 
 import re
-import struct
 import sys
 import unittest
 from importlib import import_module
@@ -31,8 +29,6 @@ REGISTER_PATCH = re.compile(
     re.MULTILINE,
 )
 OCTAL_BYTE = re.compile(r"\\([0-7]{1,3})")
-C_FIELD = re.compile(r"^\s*(\w+)\s+(\w+)\s*(?:\[(\d+)\])?\s*;", re.MULTILINE)
-C_SCALARS = {"uint8_t": "B", "uint32_t": "I", "uint64_t": "Q"}
 
 
 def shell_bytes(literal):
@@ -97,42 +93,16 @@ class OfflinePatcherTests(unittest.TestCase):
 
 
 class SidecarHeaderTests(unittest.TestCase):
-    """The `.rx3stem` header is declared in Python and parsed in C."""
+    """Host-side `.rx3stem` layout. No AZ performance core parses this yet."""
 
-    def test_declared_layout_matches_the_device_struct(self):
-        declaration = modules_by_id()["stems"].directory / "rx3_stems_decl.h"
-        text = declaration.read_text(encoding="utf-8")
-        body = re.search(
-            r"struct\s+__attribute__\(\(packed\)\)\s+sidecar_header\s*\{(.*?)\}",
-            text, re.DOTALL,
-        )
-        self.assertIsNotNone(body, "sidecar_header is no longer declared in C")
-
-        fields = []
-        for ctype, _name, count in C_FIELD.findall(body.group(1)):
-            if ctype == "char":
-                fields.append(f"{count or 1}s")
-            else:
-                self.assertIn(ctype, C_SCALARS, f"unmapped C type {ctype}")
-                code = C_SCALARS[ctype]
-                # A uint8_t array is an opaque blob on both sides, not a count.
-                fields.append(f"{count}s" if count and code == "B" else code * int(count or 1))
-
-        self.assertEqual(
-            "<" + "".join(fields), sidecar.HEADER.format,
-            "the C struct and sidecar.HEADER no longer describe the same bytes",
-        )
-        self.assertEqual(struct.calcsize("<" + "".join(fields)), sidecar.HEADER.size)
-
-    def test_magic_is_the_one_the_core_compares(self):
-        hook = (modules_by_id()["core"].directory / "rx3_core_hook.c").read_text(
-            encoding="utf-8"
-        )
-        compared = re.search(r'memcmp\(header\.magic,\s*"([^"]+)",\s*(\d+)\)', hook)
-        self.assertIsNotNone(compared, "the core no longer compares the sidecar magic")
-        literal, length = compared.group(1), int(compared.group(2))
-        self.assertEqual(sidecar.MAGIC[:length].decode("ascii"), literal)
-        self.assertLessEqual(length, len(sidecar.MAGIC))
+    def test_header_layout_is_stable(self):
+        self.assertEqual(sidecar.HEADER.format, "<8sIIIIQ32s")
+        self.assertEqual(sidecar.HEADER.size, 64)
+        self.assertEqual(sidecar.MAGIC, b"RX3STM1\0")
+        self.assertIn("stems", modules_by_id())
+        stems = modules_by_id()["stems"]
+        self.assertEqual(stems.firmware, "1.30")
+        self.assertFalse((stems.directory / "rx3_stems_decl.h").exists())
 
 
 if __name__ == "__main__":
