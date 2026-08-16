@@ -17,7 +17,7 @@ licenses of the bundled dependencies.
 
 ## Separation runtime
 
-XDJ-RX3 Toolkit does not redistribute a separation runtime. On request it
+XDJ-AZ Toolkit does not redistribute a separation runtime. On request it
 installs audio-separator (MIT), PyTorch (BSD-3-Clause), librosa (ISC), soundfile
 (BSD-3-Clause, binding the LGPL-2.1 libsndfile), and imageio-ffmpeg
 (BSD-2-Clause, carrying an FFmpeg build under its own terms) from the Python
@@ -32,7 +32,7 @@ of them is redistributed here.
 
 ## Material not relicensed
 
-This project does not grant rights to RX3 firmware, manufacturer executables,
-product names, trademarks, user-provided encryption keys, music, Rekordbox
-exports, or generated stem audio. None of that material is covered by the
-project's MPL-2.0 license.
+This project does not grant rights to XDJ-AZ or XDJ-RX3 firmware, manufacturer
+executables, product names, trademarks, user-provided encryption keys, music,
+Rekordbox exports, or generated stem audio. None of that material is covered by
+the project's MPL-2.0 license.

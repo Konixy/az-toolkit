@@ -1,16 +1,16 @@
 <h1 align="center">
-  XDJ-RX3 Toolkit
+  XDJ-AZ Toolkit
 </h1>
 
 <p align="center">
-  <b>Vocal &amp; instrumental stems, longer beat jumps, and more on your XDJ-RX3.</b><br>
+  <b>A fail-closed USB runtime for the XDJ-AZ, plus stem preparation on your computer.</b><br>
   No flashing. No firmware surgery. Pull the USB stick out and your player is stock again.
 </p>
 
 <p align="center">
-  <a href="../../releases"><img alt="Release" src="https://img.shields.io/github/v/release/Tratosca/rx3-toolkit?style=flat-square&color=ff5c00"></a>
+  <a href="../../releases"><img alt="Release" src="https://img.shields.io/github/v/release/Konixy/az-toolkit?style=flat-square&color=ff5c00"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MPL--2.0-blue?style=flat-square"></a>
-  <img alt="Firmware" src="https://img.shields.io/badge/XDJ--RX3%20firmware-1.19-black?style=flat-square">
+  <img alt="Firmware" src="https://img.shields.io/badge/XDJ--AZ%20firmware-1.30-black?style=flat-square">
   <img alt="Platforms" src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-lightgrey?style=flat-square">
 </p>
 
@@ -24,46 +24,39 @@
   <a href="#documentation">Docs</a>
 </p>
 
-<!-- Add a demo GIF or a photo of the pads here: ![demo](docs/assets/demo.gif) -->
-
 ---
 
 ## What you get
 
-### 🎤 Stems in standalone mode
+This is a port of [Tratosca’s XDJ-RX3 Toolkit](https://github.com/Tratosca/rx3-toolkit) to the **XDJ-AZ**. The AZ is a different machine (RK3399 aarch64, firmware `1.30`). RX3 ARM32 offsets, hashes and the performance core are **not** shipped. Until a session log from a real AZ names a player-binary hash and verified patch words, the USB runtime **does not rewrite `rbp`**.
 
-Prepare stems of your tracks on your computer, load them on the RX3 the usual
-way, and the **Slip Loop** PADs mode or **STEM** on screen tab turns into stem control:
+### 🔍 Safe inventory (on by default)
 
-| Pad | Colour | What it does |
-| :--: | :--: | --- |
-| **7** | 🔴 Red | Instrumental on / off |
-| **8** | 🟢 Green | Vocal on / off |
+The first stick is a probe. If Pioneer’s USB maintenance path still runs `autoexec.bin` on the AZ, you get `AZ_RUNTIME/session.txt` with architecture, mounts, the player binary and its SHA-1. If that path does not exist, the stick is ignored and the unit stays stock.
+
+### ⏭️ Instant Hot Cue (on by default, inactive until mapped)
+
+When a track is **not already playing**, triggering a Hot Cue should start at that cue immediately instead of waiting for the beat grid. Playing decks, loops, Beat Jump and global Quantize stay stock.
+
+On firmware `1.30` the module registers **no** binary patch. Selecting it cannot write the player until a probe log maps the site.
+
+### 🎤 Stem files on the computer
+
+Prepare vocal sidecars on your laptop as before. They land in `AZ_STEMS/` as `.rx3stem` files. On-device pad mixing is **not** mapped on the AZ yet, so Slip Loop stays stock until a future hook exists.
 
 ### 🎹 Key shift
 
-Tune the key of your songs to mix harmonically (or play for Alvin & the Chipmunks). A **KEY** tab shows up on the screen:
+Not included. The AZ already ships key shift.
 
-| Control | What it does |
-| --- | --- |
-| **KEY −** / **KEY +** | One semitone down or up, twelve either way |
-| **The number in the middle** | Tap it and the deck goes back to `0` |
+### ⏭️ 32-beat Beat Jump (optional, inactive)
 
-Pioneer actually shipped a pitch shifter for the Beat FX "PITCH". While it sounds gorgeous going down, the audio quality is like a
-broken fax going up. Our brand new AI-generated pitch shifter algorithm is exactly the opposite kind of bad. So the mod uses whichever one wins the direction you asked for.
-
-### ⏭️ 32-beat Beat Jump
-
-Beat Jump gets a new **32-beat** mode. Repeated presses also fire
-straight away instead of waiting for the grid to catch up.
+The RX3 modules for ±32 Beat Jump and immediate jumps are present as empty, fail-closed adapters. They cannot write `rbp` until offsets are mapped. They stay **off** by default.
 
 ### 🔌 Lives on the USB stick, not in the player
 
-Everything runs from the stick and disappears when the power goes off. Any RX3 you plug your stick on will be modded. Nothing
-is written to the player's internal memory, so there is no firmware to back up
-and nothing to uninstall.
+Everything runs from the stick and disappears when the power goes off. Nothing is written to the player’s internal memory. This toolkit **never flashes a `.UPD`**.
 
-**Power off → pull the stick → power on → stock RX3.**
+**Power off → pull the stick → power on → stock AZ.**
 
 ---
 
@@ -71,11 +64,11 @@ and nothing to uninstall.
 
 | | |
 | --- | --- |
-| 🎛️ **Player** | Pioneer DJ XDJ-RX3, firmware `1.19` only at the moment |
+| 🎛️ **Player** | Pioneer DJ / AlphaTheta XDJ-AZ, firmware `1.30` only |
 | 💻 **Computer** | macOS (Intel or Apple Silicon), Windows x64, or Linux x64 |
 | 💾 **USB stick** | A normal Rekordbox export, FAT32 or exFAT |
 | 🔑 **A key file** | Not distributed here — [see below](#4-the-key-file) |
-| 📀 **Disk space** | ~1.5 GB, only if you want stems |
+| 📀 **Disk space** | ~1.5 GB, only if you want to prepare stems |
 
 About **20 minutes** to set everything up. After that, stems take from a few
 seconds to a few minutes per track. A GPU (NVIDIA, AMD, or Apple Silicon) makes
@@ -87,24 +80,23 @@ that dramatically faster.
 
 **Read this bit.** It is short.
 
-- **Nothing is flashed.** The toolkit does not write to the player's internal
-  storage. It uses the maintenance mechanism Pioneer built into the RX3 to run
-  software from a USB stick, and everything lives in memory until you power off.
-- **There is a safety net.** If the modified player does not survive the first
-  few seconds, the original one is put back automatically.
-- **It can still crash.** Modified software on a live machine is modified
-  software on a live machine. That matters rather a lot when the thing is
-  plugged into a 20 kW PA. **Test at home. Test the actual stick, the actual
-  tracks, several times. Keep a clean Rekordbox stick in the bag.**
+- **Nothing is flashed.** The toolkit does not write to the player’s internal
+  storage and will not install an official or unofficial `.UPD`. If the AZ still
+  runs Pioneer’s USB `autoexec.bin` path, the script runs in RAM. If it does not,
+  inserting the stick does nothing.
+- **Fail-closed.** Firmware `1.30` ships with an empty SHA-1 list and empty
+  patch tables. A 64-bit `rbp` with a leftover ARM32 table is refused. A
+  persistent (non-RAM) root is refused. Unknown hashes refuse any write.
+- **It can still crash** once binary patches exist. Modified software on a live
+  machine is modified software on a live machine. **Test at home. Keep a clean
+  Rekordbox stick in the bag.**
+- **Do not copy RX3 patches onto the AZ.** Different SoC, different ABI,
+  different `rbp`.
 - **Warranty.** Running unofficial software on consumer hardware may affect what
   the manufacturer is willing to do for you. Nothing here is permanent, but that
-  is not a promise about anyone's warranty decisions.
-- **Liability.** This is an educational and experimental project. If it crashes
-  during your $50,000 set, that would be unfortunate. I do wish you the $50,000
-  set.
-- **Music.** Separation happens on your computer, on your files. What you are
-  allowed to copy, process and perform depends on your licences and your
-  jurisdiction, not on this tool.
+  is not a promise about anyone’s warranty decisions.
+- **Liability.** This is an educational and experimental project.
+- **Music.** Separation happens on your computer, on your files.
 - **Affiliation.** Not affiliated with, endorsed by, or connected to Pioneer DJ
   or AlphaTheta. Product names identify compatible gear and nothing more.
 
@@ -112,23 +104,22 @@ that dramatically faster.
 
 ## Quick start
 
-Do these in order. For your first go, I'd suggest you use a spare USB stick and two or three
-tracks.
+Do these in order. For your first go, use a spare USB stick.
 
 ### 1. Check your firmware
 
-Remove every USB stick, power the RX3 on, hold **MENU (UTILITY)** for a second,
+Remove every USB stick, power the AZ on, hold **MENU (UTILITY)** for a second,
 scroll to the bottom.
 
 ```text
-VERSION No. 1.19
+VERSION No. 1.30
 ```
 
 Anything else and you should stop here — the toolkit is built against this exact
-version and simply will not apply itself to another one. AlphaTheta documents
-updating [in its support article](https://support.alphatheta.com/en-US/articles/5097637194137?product=4416587179673).
+version and will not apply binary patches to another one. AlphaTheta documents
+updating [in its support article](https://support.alphatheta.com/en-us/articles/37072403941145).
 
-Power the RX3 back off.
+Power the AZ back off.
 
 ### 2. Download the app
 
@@ -138,12 +129,12 @@ unpack it wherever you keep applications.
 <details>
 <summary><b>macOS says the app is damaged / Windows shows a warning</b></summary>
 
-The app is not code-signed yet, hich means your computer suspects it could be malicious.
+The app is not code-signed yet, which means your computer suspects it could be malicious.
 
-**macOS** — clear the quarantine flag your browser put on the download. Open the Terminal application, (in the Utilities folder), type `xattr rc` then drag the app into the window to fill in the path:
+**macOS** — clear the quarantine flag your browser put on the download. Open the Terminal application, type `xattr -rc` then drag the app into the window to fill in the path:
 
 ```sh
-xattr -rc "/Applications/XDJ-RX3 Toolkit.app"
+xattr -rc "/Applications/XDJ-AZ Toolkit.app"
 ```
 
 `No such file or directory` means the path is wrong: it must point at the
@@ -157,41 +148,25 @@ unpacked `.app` itself, not the `.zip` and not the folder around it.
 
 ### 3. Prepare your stems *(optional)*
 
-Skip this if you only want the longer beat jumps.
+Skip this until on-device mixing exists, unless you want the files ready.
 
-1. In Rekordbox, make a playlist with the tracks you want stems for. Two or
-   three, for a first run.
-2. Export your Rekordbox collection **as XML** (Preferences → *Advanced* or
-   *View*, depending on your version). This is not the same as exporting to a
-   stick. The app reads it to find where your audio files are.
+1. In Rekordbox, make a playlist with the tracks you want stems for.
+2. Export your Rekordbox collection **as XML**.
 3. Open the app, go to the **Stems preparation** tab, and hit **Set up… → Install**.
-   Separation needs a lot of software that is too big to ship in the download,
-   so it gets installed once into its own private folder. You need an internet
-   connection, ~1.5 GB free, and Python 3.10–3.13
-   ([python.org](https://www.python.org/downloads/) if you have none — take 3.13).
-   If it stops halfway, press **Install** again; it picks up where it left off.
-4. Select your XML, your playlist, and your Rekordbox USB stick.
-5. Pick a quality: **Fast** for big libraries, **High quality** for exposed
-   acapellas. 
-6. Start it. The app estimates how long the run will take, then corrects itself
-   after the first track and remembers your machine's speed for next time.
+   You need an internet connection, ~1.5 GB free, and Python 3.10–3.13.
+4. Select your XML, your playlist, and a destination (the Rekordbox USB stick is fine).
+5. Pick a quality and start it.
 
-Each track produces a `.rx3stem` file in a `RX3_STEMS` folder on the output folder you chose. If you didn't chose your Rekordbox USB stick as an output path, it's time to move that folder at the root of it
+Each track produces a `.rx3stem` file in an `AZ_STEMS` folder:
 
 ```text
 Your USB stick
 ├── Contents    ← this holds your exported Rekordbox audio files
 ├── PIONEER
-└── RX3_STEMS   ← the new one
+└── AZ_STEMS    ← the new one
 ```
 
-> [!NOTE]
-> The stem playlist itself does **not** need to go on the stick, but it totally can. The player
-> matches stems automatically.
-
-Keep the laptop plugged in and awake. If one track fails the queue carries on —
-read the log at the end. If *every* track fails, the install is incomplete: run
-**Install** again. See [Troubleshooting](docs/troubleshooting.md#every-track-fails).
+Keep the laptop plugged in and awake. See [Troubleshooting](docs/troubleshooting.md#every-track-fails).
 
 ### 4. The key file
 
@@ -201,28 +176,25 @@ build it.
 > [!CAUTION]
 > **This project does not distribute that key, and never will.**
 
-It is not a secret, though. Pioneer publishes the GPL/LGPL source archives for
-the XDJ-RX3 (`pioneerdj_xdj_rx3.tar.bz2.00` and `.01`) on its
-[open source distribution page](https://www.pioneerdj.com/en/support/open-source-code-distribution/gnu-open-source-license/),
-and building the filesystem from them exposes the key. Getting it — and deciding
-whether you may use it where you live — is the one step nobody can do for you.
+Pioneer publishes GPL/LGPL sources for the XDJ-AZ (`XDJ-AZ.tar.gz.00` … `.05`) on its
+[open source distribution page](https://www.pioneerdj.com/en/support/open-source-code-distribution/gnu-open-source-license/).
+The published overlay does **not** contain `aes256.key` or `decrypt_autoexec.sh`. Getting a USB-maintenance key — and deciding whether you may use it where you live — is the one step nobody can do for you.
 
-Step-by-step: [**Extracting the RX3 initramfs**](docs/extract-initramfs.md).
-
-The file you're looking for will be called `aes256.key` when you'll have completed the steps above. 
+Step-by-step: [**Pioneer sources and the USB key**](docs/extract-initramfs.md).
 
 ### 5. Build the file for your stick
 
-Now that the hard part is done, in the **Modules installation** tab: pick firmware `1.19`, choose the modules you want (some are automatically checked or unchecked depending on which mods you chose), pick your key file, pick the
-**root of your Rekordbox stick** as the destination, then **Mod your RX3 !**.
+In the **Modules installation** tab: pick firmware `1.30`, leave the defaults
+(**Safe inventory**, **Session logging**, **Instant Hot Cue**) ticked, pick your
+key file, pick the **root of your Rekordbox stick** as the destination, then
+**Build for your AZ**.
 
-Eject the stick
-properly. It should now look like:
+Eject the stick properly. It should now look like:
 
 ```text
 USB stick/
-├── autoexec.bin      ← the mod, this is the whole thing
-├── RX3_STEMS/
+├── autoexec.bin      ← the runtime, this is the whole on-device thing
+├── AZ_STEMS/         ← only if you prepared stems
 ├── Contents/
 └── PIONEER/
 ```
@@ -231,25 +203,31 @@ USB stick/
 
 **Order matters.**
 
-1. Power the RX3 on with the stick **out**.
+1. Power the AZ on with the stick **out**.
 2. Wait until the interface is fully loaded and responsive.
 3. *Now* insert the stick.
 
-The screen freezes, goes away for a few seconds and comes back. While that happens, do
-not pull the stick, do not cut power, and do not mash the controls because
-patience has apparently become obsolete.
+Do not pull the stick, do not cut power, and do not mash the controls while it
+thinks. If logging is on, **eject** the stick later — never yank it.
 
 <details>
 <summary><b>Did it work?</b></summary>
 
-The stick now contains `RX3_RUNTIME/session.txt`. Its last line should read:
+If Pioneer’s USB path ran the image, the stick now contains `AZ_RUNTIME/session.txt`. Its last line should read:
 
 ```text
 === complete ===
 ```
 
+The log should also say `no guarded words: rbp will not be rewritten`. That is
+the expected first run, not a failure.
+
+**Nothing happened, no `AZ_RUNTIME` folder?** The AZ may not consume
+`autoexec.bin`. The unit stayed stock. Keep the log-less stick; do not try to
+flash firmware to “make it work”.
+
 **Interface did not come back?** Pull the stick and power cycle — unplug the
-mains lead if you have to. The RX3 boots stock.
+mains lead if you have to. The AZ boots stock.
 
 **Log says `STOP:` or `FAILED:`?** Delete `autoexec.bin` from the stick, then see
 [Troubleshooting](docs/troubleshooting.md#the-session-log-says-stop-or-failed).
@@ -260,21 +238,15 @@ mains lead if you have to. The RX3 boots stock.
 
 ## Playing with it
 
-Load one of your prepared tracks and open **Slip Loop**.
+On the first mapped-less build, playback is stock. That is intentional.
 
-Pads 7 and 8 blink while the stem loads, then settle on red and green. They are
-two independent switches — press pad 8 and the vocal drops out of the mix.
+Once Instant Hot Cue is mapped from a probe log: load a track, leave it
+**stopped**, hit a Hot Cue. Audio should start at that cue without waiting for
+the grid. Start the track with Play first, then hit a Hot Cue — quantize stays
+stock.
 
-Open **Beat Jump** on the same track: pads 7 and 8 now read `32`.
-
-Open the **KEY** tab on the screen and press `KEY +` a few times: the deck
-climbs a semitone at a time, up to twelve. The other deck does not follow — each
-one has its own key. Tap the number in the middle to come straight back to `0`.
-
-Load a track with no stem and Slip Loop behaves exactly like stock. That is the
-intended fallback, not a failure — if a track you *did* prepare has no stem
-controls, then either you probably did something wron, or I did. See
-[Troubleshooting](docs/troubleshooting.md#a-prepared-track-has-no-stem-controls) and only after open an issue..
+Stem pads and ±32 Beat Jump stay stock until those modules have verified
+offsets. A prepared `AZ_STEMS` folder does no harm in the meantime.
 
 ---
 
@@ -287,9 +259,9 @@ controls, then either you probably did something wron, or I did. See
 
 Done. Nothing to uninstall, nothing to restore, nothing to reflash.
 
-Leaving the stick in re-applies the mod at the next power-on. To turn it back
-into an ordinary Rekordbox stick for good, delete `autoexec.bin` from it — your
-music and your stems can stay.
+Leaving the stick in re-applies the runtime at the next power-on *if* the AZ
+loads `autoexec.bin`. To turn it back into an ordinary Rekordbox stick for good,
+delete `autoexec.bin` — your music and your stems can stay.
 
 ---
 
@@ -298,96 +270,82 @@ music and your stems can stay.
 <details>
 <summary><b>How does it work?</b></summary><br>
 
-It happens that, by Pioneer design, the RX3 (and probably other boards too), which is based on Linux, looks at every USB stick you insert to see whether it carries an `autoexec.bin` file, and if that file decrypts with a specific key contained inside the player, it runs the script inside. That is the manufacturer's own maintenance mechanism, and it runs that script as the full privileged **root** account inside the player, so we can do basically anything a Linux system can do.
+On the RX3, Pioneer’s Linux userland looks at every USB stick for an
+`autoexec.bin`, decrypts it, and runs the script inside as root. That is the
+manufacturer’s maintenance mechanism. This toolkit still builds that image.
 
-The whole player interface is one Linux program called `rbp` (Rekordbox Portable ?), and when you boot the RX3, it's copied *in a temporary memory* to be used from there. That is done at every startup. Our script patches that live copy, and the new features are simply code running inside the player, using the player's own fonts, images and pads. Nothing is written to the permanent storage. Cut the power and the RAM forgets the whole affair, and next startup will have to copy the stock `rbp` to RAM again for the player to run. 
+The published XDJ-AZ GPL overlay does not include that decrypt helper. Whether
+the proprietary player still honours the file is what the first probe stick is
+for. If it does not, you get stock behaviour and an ordinary Rekordbox stick.
 
-"Patching" here means two things. A handful of individual and precise bytes are rewritten in place: that is all a beat jump of 32 instead of 8 really is. Everything bigger arrives as a *shared library* that gets preloaded next to `rbp` and hooks its functions from the inside, which is how you end up with vocals, instrumentals and a key shifter in a player that shipped with none of the three.
+When the script does run, it may patch the live copy of `rbp` (the player
+application) in RAM. Power off and the RAM forgets it. Firmware `1.30` registers
+no patch words, so the first image only inventories the unit.
 
-The `KEY` and `STEMS` tabs are the same trick applied to the screen. Touch works because two native Beat FX zones were politely repurposed and handed back on the way out. The pads and the on-screen toggles blink in step because they both count from the same clock.
-
-If anything goes wrong within a few seconds after having applied the patch, the original bytes go back, the stock player starts again, and a log on your stick explains itself.
-
-Details for the curious: [The RX3 mod](docs/mod-rx3.md).
+Details: [The AZ mod](docs/mod-rx3.md).
 </details>
 
 <details>
 <summary><b>Does this flash custom firmware?</b></summary><br>
 
-No. Everything runs in memory and is gone the moment you power off without the
-stick.
+No. Official AZ `.UPD` files are LUKS-encrypted and this toolkit will not
+decrypt or flash them. The USB runtime, when it runs at all, lives in memory.
 </details>
 
 <details>
-<summary><b>Can it brick my RX3?</b></summary><br>
+<summary><b>Can it brick my AZ?</b></summary><br>
 
-The project does not write to the player's permanent storage, which removes the
+The project does not write to the player’s permanent storage, which removes the
 usual reason custom firmware bricks things. That is not a mathematical proof that
-nothing can ever go wrong. Unofficial software, own risk.
+nothing can ever go wrong. Unofficial software, own risk. Do not flash anything
+to “force” the mod on.
 </details>
 
 <details>
 <summary><b>Can it crash?</b></summary><br>
 
-Yes. Test it at home before you rely on it. Using a show as your first test would
-be an admirably efficient way of turning software testing into performance art.
+A probe-only image should not restart `rbp`. Once binary patches exist, yes —
+test at home first.
 </details>
 
 <details>
-<summary><b>Does every track need stems?</b></summary><br>
+<summary><b>Why is key shift missing?</b></summary><br>
 
-No. Prepared and unprepared tracks live happily on the same stick.
+The AZ already has it. The RX3 module and its ARM32 hook are not portable and
+were removed rather than applied blindly.
 </details>
 
 <details>
-<summary><b>Are my original files modified?</b></summary><br>
+<summary><b>Why only firmware 1.30?</b></summary><br>
 
-No. The stem is a separate sidecar file sitting next to the track.
-</details>
-
-<details>
-<summary><b>Why only firmware 1.19?</b></summary><br>
-
-The mod patches the player software at very specific places, and a firmware
-update moves that code around. So the toolkit checks it is looking at the player
-it expects, and refuses if it is not. Support
-for other versions has to be added and tested deliberately.
-</details>
-
-<details>
-<summary><b>Why are stems made on the computer and not on the player?</b></summary><br>
-
-Because separation models are big and expensive to run. Doing the heavy work on
-your laptop means better models, GPU acceleration, no waiting on the RX3, and
-untouched originals. Improving the model later does not mean rewriting anything
-on the player. The computer does the absurdly expensive maths; the DJ player gets
-to carry on being a DJ player.
+Binary patches are tied to exact bytes. A firmware update moves that code.
+`1.30` is the version this port targets, and it still refuses to write until a
+hash from *your* unit is registered with verified words.
 </details>
 
 <details>
 <summary><b>Can I update my firmware while this is installed?</b></summary><br>
 
-There is nothing installed. Pull the stick and the unit is stock. But after a
-firmware change, do not assume the toolkit still works — only use versions listed
-as supported. **If you do update, please to a clean boot cycle, without the mod USB, just in case**.  
+There is nothing installed. Pull the stick and the unit is stock. After a
+firmware change, do not assume the toolkit still works. **Update with a clean
+boot, without the mod USB.**
 </details>
 
 ---
 
 ## Roadmap
 
-What is being worked on next. No dates, no promises but this is the direction.
+What is being worked on next. No dates, no promises.
 
 | | What it would give you | Status |
 | --- | --- | :--: |
-| **FX equalization** | The FX equalization of a DJM-900NXS2 to make your echoes and delays not go bang bang  | 💡 Planned |
-| **Key sync between decks** | The player reads both keys and nudges a deck for you, so you can stop doing musical theory at 2am | 💡 Planned |
-| **Proper STEMS / KEY on the display** | The stem and key-shift on the screen are properly integrated and perfectly working | 🚧 In progress |
-| **Polished interface** | Real icons, text and artwork for everything the mod adds, matching the stock look | 🚧 In progress |
-| **Full system emulator** | From the U-Boot to the beat, to develop and test mods from the sofa (and open to anyone who does not own an RX3) | 🚧 In progress |
-| **CPU and memory monitoring** | Headroom monitoring so heavier features stay safe to use for a whole set | 💡 Planned |
+| **Probe log from hardware** | A real `rbp` SHA-1 and ELF class from an AZ 1.30 | 🚧 Waiting on a first stick |
+| **Instant Hot Cue** | Skip grid wait when the deck is stopped | 🚧 Module shipped, offsets not mapped |
+| **±32 Beat Jump** | Pads 7/8 as ±32 | 💡 Planned after a mapped hash |
+| **On-device stem pads** | Slip Loop vocal / instrumental on the AZ | 💡 Planned; sidecars already generate |
+| **CPU and memory monitoring** | Headroom so heavier features stay safe | 💡 Planned |
 
-Want one of these sooner ? Or something else ? Say so in an issue, or build it yourself (see
+Want one of these sooner? Or something else? Say so in an issue, or build it yourself (see
 [Contributing](#contributing)).
 
 ---
@@ -396,11 +354,11 @@ Want one of these sooner ? Or something else ? Say so in an issue, or build it y
 
 | | |
 | --- | --- |
-| [Extracting the initramfs](docs/extract-initramfs.md) | Getting the key out of Pioneer's published sources |
-| [The RX3 mod](docs/mod-rx3.md) | Architecture, modules, applying and removing, session logs |
+| [Pioneer sources and the USB key](docs/extract-initramfs.md) | Published GPL overlay, LUKS updates, why the key is not in the tarball |
+| [The AZ mod](docs/mod-rx3.md) | Architecture, modules, applying and removing, session logs |
 | [Vocal stems](docs/stem-studio.md) | Models, presets, accelerators, tuning |
 | [Troubleshooting](docs/troubleshooting.md) | Symptoms, errors, fixes |
-| [Reference](docs/reference.md) | File formats, commands, addresses, hardware findings |
+| [Reference](docs/reference.md) | File formats, commands, hardware findings |
 | [Contributing](CONTRIBUTING.md) | Build from source, run the tests, write a module |
 | [Changelog](CHANGELOG.md) | What changed |
 
@@ -408,12 +366,12 @@ Want one of these sooner ? Or something else ? Say so in an issue, or build it y
 
 ## Contributing
 
-Pull requests welcome — new modules, support for future firmware,
-reverse-engineering notes, UI work, faster separation, testing on other systems,
-or just better docs. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+Pull requests welcome — probe logs from firmware `1.30` (redact keys), mapped
+offsets with stock/patched words, UI work, faster separation, or better docs.
+Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Reporting a bug?** Include your firmware version, your OS, the toolkit version,
-the contents of `RX3_RUNTIME/session.txt`, and the steps to reproduce. For stem
+the contents of `AZ_RUNTIME/session.txt`, and the steps to reproduce. For stem
 problems, add the model, the quality preset, your CPU/GPU, and whether it affects
 one track or all of them.
 
@@ -432,15 +390,16 @@ the licence permits. Third-party components are listed in
 Keys, firmware, manufacturer binaries and copyrighted music are not in this
 repository and are never release assets.
 
-Pioneer DJ, AlphaTheta, Rekordbox and XDJ-RX3 are trademarks of their respective
+Pioneer DJ, AlphaTheta, Rekordbox and XDJ-AZ are trademarks of their respective
 owners, used here descriptively only.
 
 ---
 
 ## Acknowledgements
 
-The open-source software running inside the RX3, the GPL/LGPL sources Pioneer
-published, the reverse-engineering community, the people who build the
+The open-source software running inside the player, the GPL/LGPL sources Pioneer
+published, [Tratosca’s RX3 toolkit](https://github.com/Tratosca/rx3-toolkit) this
+fork starts from, the reverse-engineering community, the people who build the
 audio-separation models — and everyone who has ever looked at a perfectly
 functional DJ player and asked:
 

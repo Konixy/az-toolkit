@@ -1,5 +1,10 @@
 # Émulateur minimal RX3 1.19 avec écran tactile virtuel
 
+> **XDJ-AZ: do not use this.** These notes target the XDJ-RX3 firmware 1.19
+> ARM32 `rbp` on i.MX6. The AZ is RK3399 aarch64. Offsets, the hook, and the
+> emulator image must never be applied to an AZ. `make emulate*` is not wired
+> in this fork.
+
 Cet outil exécute le véritable binaire ARM `rbp` et les bibliothèques du
 firmware 1.19 dans Docker/QEMU. Un shim remplace `fbdev` et les périphériques
 indispensables au démarrage, puis exporte le framebuffer DirectFB en PNG. La

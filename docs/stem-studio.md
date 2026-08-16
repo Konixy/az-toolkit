@@ -1,11 +1,12 @@
 # Vocal stems
 
-The **Vocal Stems** tab of XDJ-RX3 Toolkit: generating stems, choosing a quality
-preset, and managing the separation runtime. For a first run, follow the
-[Quick Start](quickstart.md) instead.
+The **Stems preparation** tab of XDJ-AZ Toolkit: generating stems, choosing a
+quality preset, and managing the separation runtime. For a first run, follow the
+[Quick Start](../README.md#quick-start) instead.
 
-Separation happens on your computer. The RX3 never separates anything, and your
-audio never leaves the machine.
+Separation happens on your computer. The AZ never separates anything, and your
+audio never leaves the machine. On firmware `1.30` the player does not mix
+these files yet; generating them now only prepares `AZ_STEMS` for a future hook.
 
 ## The job
 
@@ -13,8 +14,8 @@ audio never leaves the machine.
 2. Select the XML file and the playlist to process.
 3. Select a destination, pick a quality preset, and start.
 
-The tab writes an `RX3_STEMS` directory and a JSON manifest. Copy
-`RX3_STEMS` to the root of the Rekordbox USB drive, or select the drive as the
+The tab writes an `AZ_STEMS` directory and a JSON manifest. Copy
+`AZ_STEMS` to the root of the Rekordbox USB drive, or select the drive as the
 destination and skip the copy.
 
 A sidecar is matched to a track by exact basename, so `Artist - Title.mp3` needs
@@ -22,16 +23,15 @@ A sidecar is matched to a track by exact basename, so `Artist - Title.mp3` needs
 track to a drive, keeping the first 44 characters, and the deck only ever knows
 the shortened name; the sidecar is named the same way, from the library
 file it separated. Two tracks that end up with the same name are rejected rather
-than guessed at, because the RX3 load interface exposes nothing that would tell
-them apart.
+than guessed at.
 
 Existing valid sidecars are kept on later runs, so an interrupted job resumes
 where it stopped. A track that fails is reported and the queue continues. If the
 destination is a mount point and it disappears mid-job, the run stops with an
 explicit error instead of writing to a stale path.
 
-This tab never installs `autoexec.bin` and never writes to the RX3. That is
-the **USB Runtime** tab's job.
+This tab never installs `autoexec.bin` and never writes to the AZ. That is
+the **Modules installation** tab's job.
 
 ## Where things are stored
 

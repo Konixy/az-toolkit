@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions are limited to original source code, tests, and RX3
+Contributions are limited to original source code, tests, and XDJ-AZ
 interoperability documentation.
 
 By submitting a contribution you agree to license it under the Mozilla Public
@@ -13,40 +13,42 @@ Firmware, manufacturer code, manufacturer binaries or GUI assets, credentials,
 encryption keys, dumps, mounted images, copyrighted audio, extracted proprietary
 assets, and generated artifacts.
 
+Do not submit RX3 `rbp` SHA-1 values, ARM32 trampolines, or firmware 1.19
+offsets as if they applied to the AZ. They do not.
+
 `.gitignore` prevents the common accidents. It does not remove material already
 in Git history. Run `make preflight`, review `git status`, and inspect the
 staged diff before every public push.
 
 Tagged GitHub Releases are the only exception for compiled artifacts: CI attaches
-the applications and the original ARM component they embed. Firmware,
-manufacturer code, keys, credentials and generated `autoexec.bin` files are never
-release assets.
+the desktop applications. Firmware, manufacturer code, keys, credentials,
+generated `autoexec.bin` files, and ARM32 hooks are never release assets.
 
 ## Repository layout
 
-Everything under `mod/` executes on the RX3, as root. Everything above it
-runs on your computer.
+Everything under `mod/` executes on the AZ, as root, if Pioneer’s USB
+maintenance path still runs `autoexec.bin`. Everything above it runs on your
+computer.
 
 | Path | Contents |
 |---|---|
 | `mod/autoexec.sh` | On-device orchestrator: indexed module loading, validation, guarded writes, rollback, logging |
 | `mod/lib/module-api.sh` | Registration contract shared by every on-device module |
-| `mod/<firmware>/compatibility.sh` | Accepted `rbp` SHA-1 values for that firmware |
+| `mod/<firmware>/compatibility.sh` | Accepted `rbp` SHA-1 values for that firmware (empty on 1.30) |
 | `mod/modules/<id>/<firmware>/` | One directory per module, named after its manifest `id`, versioned by firmware |
-| `apps/rx3-toolbox/` | The one Tkinter application: a tab over the build engine, a tab over the stem pipeline |
+| `apps/rx3-toolbox/` | The Tkinter application: modules tab and stems tab |
 | `tools/rx3_runtime/` | Build engine and its CLI |
-| `tools/rx3_patcher/` | Offline counterparts to the on-device byte patches, for an extracted `rbp` |
-| `tools/rx3_firmware/` | AES sector crypto, CRC32 trailer, ISO 9660 authoring |
+| `tools/rx3_patcher/` | Offline counterparts to the on-device byte patches (empty tables on 1.30) |
+| `tools/rx3_firmware/` | USB cryptoloop codec, LUKS header inspect, ISO 9660 authoring |
 | `tools/rx3_stems/` | Rekordbox parsing, provisioning, separation, sidecar encoding |
 | `scripts/` | Release packaging and the publication preflight |
 | `tests/` | Unit tests |
 
-Neither GUI holds build or separation logic. Both drive `tools/`.
+Directory names still say `rx3_*` because this is a fork. Behaviour is AZ.
+
+Neither GUI tab holds build or separation logic. Both drive `tools/`.
 
 ## Building from source
-
-Desktop releases already embed the compiled ARM component, so this is for
-development only.
 
 ```sh
 python3 -m venv .venv
@@ -54,19 +56,21 @@ python3 -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Clang and LLD are required to compile the ARM component. CI runs on Python 3.12.
+CI runs on Python 3.12. Clang is not required: firmware 1.30 has no mapped
+aarch64 hook, and `make hook` records that skip instead of compiling the RX3
+ARM32 core.
 
-Run either interface from the repository:
+Run the interface from the repository:
 
 ```sh
 make app
 ```
 
 Build `autoexec.bin` from the terminal. Without `MODULES`, the manifest defaults
-are used:
+are used (`probe`, `logging`, `instant-hotcue`):
 
 ```sh
-make autoexec KEY=/absolute/path/to/aes256.key FIRMWARE=1.19
+make autoexec KEY=/absolute/path/to/aes256.key FIRMWARE=1.30
 ```
 
 ## Before submitting
@@ -76,27 +80,27 @@ make test
 make preflight
 ```
 
-```sh
-make hook
-```
-
-`make hook` compiles the ARM performance core and asserts the resulting ELF is
-`ELF 32-bit LSB shared object, ARM, EABI5`. `make test` runs the runtime
-regression guards and the unit tests. `make preflight` inspects every publishable
-tracked or untracked file.
+`make test` runs the module regression guards and the unit tests.
+`make preflight` inspects every publishable tracked or untracked file.
 
 ## Hardware acceptance
 
-Static tests do not cover the device. Run this sequence before claiming a
-runtime change works:
+Static tests do not cover the device. Until a mapped SHA-1 exists, the only
+honest hardware claim is:
 
-1. insert the patch drive, confirm the interface freezes then restarts;
-2. repeat ±32 Beat Jumps;
-3. load a track with no corresponding sidecar, confirm stock Slip Loop;
-4. load a prepared track, test all four component states;
-5. load prepared tracks on both decks, confirm independent audio and LED state;
-6. inspect `RX3_RUNTIME/session.txt` and `/tmp/rx3-stems.log` on failure;
-7. power cycle, confirm stock behaviour is restored.
+1. power the AZ on with the stick out;
+2. insert a default (probe + logging) stick;
+3. either `AZ_RUNTIME/session.txt` appears and ends with `=== complete ===`
+   and `no guarded words: rbp will not be rewritten`, or nothing happens and
+   the unit stays stock;
+4. eject (do not yank);
+5. power cycle without the stick and confirm stock behaviour.
+
+Do not claim Instant Hot Cue, Beat Jump or stems mixing work on hardware until
+the corresponding guarded words are registered and this sequence is expanded.
+
+A useful probe log includes `uname`, ELF class of `rbp`, its SHA-1, and whether
+`decrypt_autoexec.sh` / `aes256.key` are present. Redact keys.
 
 ## Adding a module
 
@@ -107,13 +111,15 @@ rather than maintaining separate feature lists. The schema is in
 [docs/reference.md](docs/reference.md#module-manifests).
 
 Nothing else needs editing to add a module: `make test` picks up a
-`test_regressions.py` placed beside the manifest, and `make hook` treats the
-module's headers as prerequisites.
+`test_regressions.py` placed beside the manifest.
 
 A module that also ships an offline patcher puts it in `tools/rx3_patcher/`,
 not under `mod/` — everything under `mod/` executes on the deck. The
 patcher declares `MODULE_ID` so `tests/test_module_consistency.py` can prove
 its table and the module's `register_patch` calls agree.
+
+`register_patch` and `register_rbp_sha1` must be added together, and never with
+RX3 words. An empty table is the correct 1.30 state.
 
 Dependencies belong in `requires`; feature code must never probe for a sibling
 module to create an implicit dependency. The build rejects missing modules,
@@ -123,15 +129,10 @@ Every `module.sh` starts with `module_begin <id> <namespace>`. Its lifecycle
 function names must start with that namespace. Sourcing a module may register
 contracts only; device mutation belongs in a registered lifecycle hook.
 
-The performance core owns executable hook installation. Optional features own
-their state and hook group, depend only on core services, and must remove only
-their own hooks on failure. See
-[ADR-001](docs/architecture/ADR-001-modular-runtime.md).
-
 ## Supporting another firmware build
 
 Similar-looking addresses are not evidence. A submission adding support for
-another RX3 firmware build must identify:
+another AZ firmware build must identify:
 
 - the exact target hash;
 - the byte guards;
@@ -140,7 +141,8 @@ another RX3 firmware build must identify:
 - the result on hardware.
 
 Every guarded word must have a stock value and a patched value, and the
-orchestrator must be able to tell them apart.
+orchestrator must be able to tell them apart. ELF class must match the table
+(aarch64 is not ARM32).
 
 ## Security
 

@@ -1,6 +1,44 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 # Changelog
 
+## 0.6.0
+
+Port to the XDJ-AZ. The USB runtime is fail-closed on firmware `1.30`: it
+inventories the player and does not rewrite `rbp` until a session log names a
+hash and verified patch words. Key shift is stock on the AZ and was removed.
+
+### Added
+
+- Firmware `1.30` modules: **probe** (read-only inventory), **Instant Hot Cue**
+  (intended: skip grid wait on a stopped deck; empty patch table until mapped),
+  plus fail-closed adapters for Beat Jump, decoder sleep, stems sidecar
+  publish, telnet and session logging.
+- Session files live in `AZ_RUNTIME/`. Stem sidecars live in `AZ_STEMS/`.
+- The firmware codec can describe a LUKS1 AZ `.UPD` header (model `XDJ-XZN`).
+  It does not decrypt LUKS and the toolkit never flashes an update.
+
+### Changed
+
+- Desktop application, archives and bundle id are **XDJ-AZ Toolkit**
+  (`org.xdjaz.toolkit`). The build button is **Build for your AZ**.
+- Default firmware is `1.30`. Default modules are probe, logging and Instant
+  Hot Cue. `make hook` is a no-op: compiling the RX3 ARM32 core against an
+  aarch64 player would be unsafe even as a build check.
+- Decoder sleep talks to four decks (0–3) over UDP if port 20000 exists.
+- CI no longer compiles or ships `librx3_core.so`.
+
+### Removed
+
+- Firmware `1.19` modules, **key shift**, and the ARM32 performance core.
+- RX3 `rbp` SHA-1 registrations. They must never be reused on the AZ.
+
+### Safety
+
+- A non-RAM root, a separate `/root/pdj` mount, a 64-bit `rbp` with an ARM32
+  table, or an unknown hash with any guarded word, stops before a write.
+- A build with zero guarded words skips the identity check so a first insertion
+  can collect a probe log.
+
 ## 0.5.2
 
 A runtime built on Windows loads its modules again.

@@ -1,5 +1,8 @@
 # Cartographie UI Performance de `rbp` 1.19
 
+> **XDJ-AZ: do not use these addresses.** They belong to XDJ-RX3 firmware 1.19
+> ARM32 `rbp`. Applying them to an AZ is a random write.
+
 Cette note sépare les faits extraits du binaire, les observations sur le RX3 et
 la stratégie de patch. Les adresses sont celles du `rbp` XDJ-RX3 1.19, MD5
 `cc3ee1a81489d6363dc800d01102ea5f`.

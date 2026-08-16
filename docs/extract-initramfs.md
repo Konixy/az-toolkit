@@ -1,281 +1,85 @@
-# Extracting `initramfs.tar.gz` from the XDJ-RX3 Source Package
+# Pioneer sources and the USB key
 
-The XDJ-RX3 source package is distributed as two ZIP files:
+The desktop app encrypts `autoexec.bin` with Pioneer’s historical USB
+cryptoloop layout (AES-256-CBC per 512-byte sector). It needs the matching
+key file to do that.
 
-```text
-A9BEE4F7-6932-4E11-8D9F-5288F5F79EC2.zip
-57CB205B-D45A-4143-BC09-22D8400074C2.zip
-```
+> **This project does not distribute that key, and never will.**
 
-Each ZIP contains one part of a split `tar.bz2` archive.
+## What Pioneer publishes
 
-The extraction process is:
-
-```text
-ZIP files
-   ↓
-split .tar.bz2 parts
-   ↓
-reassembled .tar.bz2
-   ↓
-source tree
-   ↓
-make_rootfs
-   ↓
-initramfs.tar.gz
-```
-
-The archive extraction and `make_rootfs` steps can be performed on **macOS or Linux**.
-
-On Windows, the archive can be extracted natively, while the `make_rootfs` step is best performed through **WSL2**.
-
----
-
-## 1. Extract the two ZIP files
-
-The ZIP files use **Deflate64**, so 7-Zip is recommended.
-
-### macOS
-
-Install 7-Zip:
-
-```bash
-brew install sevenzip
-```
-
-Create a working directory and extract both files:
-
-```bash
-mkdir rx3-source
-cd rx3-source
-
-7zz x ../A9BEE4F7-6932-4E11-8D9F-5288F5F79EC2.zip
-7zz x ../57CB205B-D45A-4143-BC09-22D8400074C2.zip
-```
-
-### Linux
-
-Install 7-Zip.
-
-Debian / Ubuntu:
-
-```bash
-sudo apt update
-sudo apt install 7zip
-```
-
-Fedora:
-
-```bash
-sudo dnf install 7zip
-```
-
-Then extract both files:
-
-```bash
-mkdir rx3-source
-cd rx3-source
-
-7zz x ../A9BEE4F7-6932-4E11-8D9F-5288F5F79EC2.zip
-7zz x ../57CB205B-D45A-4143-BC09-22D8400074C2.zip
-```
-
-On some distributions, the executable may be named `7z` instead of `7zz`.
-
-### Windows
-
-Install 7-Zip, then open PowerShell in the directory containing the ZIP files.
-
-```powershell
-mkdir rx3-source
-cd rx3-source
-
-& "C:\Program Files\7-Zip\7z.exe" x ..\A9BEE4F7-6932-4E11-8D9F-5288F5F79EC2.zip
-& "C:\Program Files\7-Zip\7z.exe" x ..\57CB205B-D45A-4143-BC09-22D8400074C2.zip
-```
-
-After extraction, you should have:
+GPL/LGPL sources for the XDJ-AZ are on Pioneer’s
+[open source distribution page](https://www.pioneerdj.com/en/support/open-source-code-distribution/gnu-open-source-license/),
+currently **XDJ-AZ version 1.04** (31 October 2024):
 
 ```text
-pioneerdj_xdj_rx3.tar.bz2.00
-pioneerdj_xdj_rx3.tar.bz2.01
+XDJ-AZ.tar.gz.00
+XDJ-AZ.tar.gz.01
+XDJ-AZ.tar.gz.02
+XDJ-AZ.tar.gz.03
+XDJ-AZ.tar.gz.04
+XDJ-AZ.tar.gz.05
 ```
 
----
+Each listed file is a ZIP around one split part. Reassemble the tarball, then
+extract it. That tree is Buildroot / Linux for **RK3399** (`RK_ARCH=arm64`),
+with an overlay named along the lines of `fs-overlay-atc`.
 
-## 2. Reassemble the split archive
+The published overlay does **not** contain:
 
-The two files are consecutive parts of the same `tar.bz2` archive.
+- `decrypt_autoexec.sh`
+- `aes256.key`
+- an `autoexec` helper under `/root/pdj` or `/usr/local/pdj`
 
-### macOS / Linux
+USB media is mounted through ordinary udev / `device-mount.sh` paths such as
+`/media/usb/...`. Whether the proprietary player still decrypts `autoexec.bin`
+is not answered by the GPL tree. A first toolkit stick with **probe** and
+**logging** is how you find out. If the file is ignored, the unit stays stock.
 
-```bash
-cat \
-  pioneerdj_xdj_rx3.tar.bz2.00 \
-  pioneerdj_xdj_rx3.tar.bz2.01 \
-  > pioneerdj_xdj_rx3.tar.bz2
+## Official firmware updates
+
+AlphaTheta’s `.UPD` for the AZ (trailer model `XDJ-XZN`, version `1.30` on the
+image this port targets) is **LUKS1 AES-XTS-plain64**, not the RX3 cryptoloop
+container.
+
+This toolkit:
+
+- can *describe* a LUKS header (`python3 tools/rx3_firmware/firmware_image.py verify FILE.UPD`);
+- will **not** brute-force a passphrase;
+- will **not** flash a `.UPD`;
+- will **not** write eMMC.
+
+`encrypt` in that same tool still produces an RX3-style cryptoloop update
+image. That is the wrong shape for an AZ update. Do not put it on the player.
+
+## What the key file is
+
+If the AZ USB path exists, it is the same 32-byte effective key the RX3 used
+for cryptoloop: first line of the file, at most 31 bytes, then a NUL, matching
+historical `xstrncpy(dst, src, 32)`.
+
+A key from another Pioneer product may or may not match. A mismatch decrypts to
+garbage and the player **silently ignores** the file. That is safe. Do not dump
+the live player, do not copy keys into issues, and do not commit a `.key`.
+
+## Extracting the published tarball
+
+On macOS or Linux, after downloading the six ZIPs:
+
+```sh
+mkdir az-source && cd az-source
+# extract each ZIP with 7-Zip (they may use Deflate64)
+7zz x ../xdj-aztargz00.zip
+# …repeat for 01–05…
+
+cat XDJ-AZ.tar.gz.00 XDJ-AZ.tar.gz.01 XDJ-AZ.tar.gz.02 \
+    XDJ-AZ.tar.gz.03 XDJ-AZ.tar.gz.04 XDJ-AZ.tar.gz.05 > XDJ-AZ.tar.gz
+tar -tf XDJ-AZ.tar.gz | head
 ```
 
-### Windows
+Inspect the overlay for `aes256.key` and `decrypt_autoexec.sh` if you want to
+confirm they are absent. Building the GPL rootfs is optional and does not, by
+itself, produce a USB key on this product.
 
-Using `cmd.exe`:
-
-```cmd
-copy /b pioneerdj_xdj_rx3.tar.bz2.00+pioneerdj_xdj_rx3.tar.bz2.01 pioneerdj_xdj_rx3.tar.bz2
-```
-
----
-
-## 3. Verify the reconstructed archive
-
-This step is optional but recommended.
-
-### macOS / Linux
-
-```bash
-bzip2 -tv pioneerdj_xdj_rx3.tar.bz2
-```
-
-Expected output:
-
-```text
-pioneerdj_xdj_rx3.tar.bz2: ok
-```
-
-### Windows
-
-Using 7-Zip:
-
-```powershell
-& "C:\Program Files\7-Zip\7z.exe" t pioneerdj_xdj_rx3.tar.bz2
-```
-
-Expected output:
-
-```text
-Everything is Ok
-```
-
----
-
-## 4. Extract the reconstructed archive
-
-### macOS / Linux
-
-```bash
-mkdir source
-tar -xjf pioneerdj_xdj_rx3.tar.bz2 -C source
-cd source
-```
-
-### Windows
-
-Recent Windows versions include `tar`:
-
-```powershell
-mkdir source
-tar -xjf pioneerdj_xdj_rx3.tar.bz2 -C source
-cd source
-```
-
-Alternatively, use 7-Zip:
-
-```powershell
-& "C:\Program Files\7-Zip\7z.exe" x pioneerdj_xdj_rx3.tar.bz2
-& "C:\Program Files\7-Zip\7z.exe" x pioneerdj_xdj_rx3.tar
-```
-
-At this point, the XDJ-RX3 source tree has been extracted.
-
-
----
-
-## 5. Run `make_rootfs`
-
-### macOS / Linux
-
-Change to the extracted directory, containing `make_rootfs`:
-
-```bash
-cd /path/to/directory/containing/make_rootfs
-```
-
-Make it executable if necessary:
-
-```bash
-chmod +x make_rootfs
-```
-
-Run it:
-
-```bash
-./make_rootfs
-```
-
-It then generates the `initrammfs.tar.gz`.
-
-### Windows
-
-Use WSL2 for the `make_rootfs` step.
-
-From WSL2, it is preferable to copy the source tree into the Linux filesystem instead of building directly under `/mnt/c`.
-
-For example:
-
-```bash
-cp -a /mnt/c/path/to/source ~/rx3-source
-cd ~/rx3-source
-```
-
-Locate `make_rootfs`:
-
-```bash
-find . -type f -name make_rootfs
-```
-
-Then:
-
-```bash
-cd /path/to/directory/containing/make_rootfs
-chmod +x make_rootfs
-./make_rootfs
-```
----
-
-## Platform support
-
-| Step | macOS | Linux | Windows |
-|---|---:|---:|---:|
-| Extract ZIP files | Yes | Yes | Yes |
-| Reassemble split archive | Yes | Yes | Yes |
-| Extract `tar.bz2` | Yes | Yes | Yes |
-| Run `make_rootfs` | Yes | Yes | Via WSL2 |
-| Obtain `initramfs.tar.gz` | Yes | Yes | Via WSL2 |
-
----
-
-## Full process
-
-```text
-A9BEE4F7-6932-4E11-8D9F-5288F5F79EC2.zip
-57CB205B-D45A-4143-BC09-22D8400074C2.zip
-        │
-        │ 7-Zip
-        ▼
-pioneerdj_xdj_rx3.tar.bz2.00
-pioneerdj_xdj_rx3.tar.bz2.01
-        │
-        │ concatenate
-        ▼
-pioneerdj_xdj_rx3.tar.bz2
-        │
-        │ tar -xjf
-        ▼
-XDJ-RX3 source tree
-        │
-        │ make_rootfs
-        │
-        │ ./ltib --deploy
-        ▼
-initramfs.tar.gz
-```
+Getting the key — and deciding whether you may use it where you live — remains
+the step this repository will not do for you.
