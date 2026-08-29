@@ -39,6 +39,20 @@ hash and verified patch words. Key shift is stock on the AZ and was removed.
 - A build with zero guarded words skips the identity check so a first insertion
   can collect a probe log.
 
+### Hardware probe (2026-08-29, firmware 1.30)
+
+- A correctly encrypted `autoexec.bin` (RX3 GPL key) is ignored: no
+  `AZ_RUNTIME/`, stock behaviour, only Pioneer's own `PIONEER/log/*-alog_*.bin`
+  media logs appear. Plain `autoexec.sh`, `update.sh`, `pioneer_update.sh`,
+  `djm_update.sh` and a dummy `.UPD` at the stick root are likewise ignored.
+- The rear USB-B port brings up an Ethernet gadget: `rk3399.local`,
+  `169.254.7.67`, Avahi live. Avahi advertises SSH but TCP 22 is refused —
+  dropbear is compiled in (blank root password in the defconfig) but disabled
+  in the shipped build. TCP 1–1024 is closed; the only open port is 12523
+  (PRO DJ LINK DBServer, documented metadata).
+- Conclusion: no software-only execution path on 1.30. Details in
+  [docs/az-hardware-probe.md](docs/az-hardware-probe.md).
+
 ## 0.5.2
 
 A runtime built on Windows loads its modules again.

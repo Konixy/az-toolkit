@@ -27,9 +27,10 @@ Check four things, in this order:
 3. it was built for firmware `1.30`, and the AZ is running `1.30`;
 4. the AZ still consumes Pioneer’s USB `autoexec.bin` path.
 
-The published AZ GPL overlay has no `decrypt_autoexec.sh`. If the proprietary
-player ignores the file, you get no `AZ_RUNTIME/` folder and stock behaviour.
-That is not a brick. Do not flash a `.UPD` to force it.
+The published AZ GPL overlay has no `decrypt_autoexec.sh`. On firmware `1.30`
+the measured result is that the player ignores the file: no `AZ_RUNTIME/`
+folder, stock behaviour. See [the hardware probe](az-hardware-probe.md). That
+is not a brick. Do not flash a `.UPD` to force it.
 
 If the AZ does not see the drive at all, it is formatted as something other
 than FAT32 or exFAT, or it was unplugged without ejecting.

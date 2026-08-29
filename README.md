@@ -30,9 +30,11 @@
 
 This is a port of [Tratosca’s XDJ-RX3 Toolkit](https://github.com/Tratosca/rx3-toolkit) to the **XDJ-AZ**. The AZ is a different machine (RK3399 aarch64, firmware `1.30`). RX3 ARM32 offsets, hashes and the performance core are **not** shipped. Until a session log from a real AZ names a player-binary hash and verified patch words, the USB runtime **does not rewrite `rbp`**.
 
+> **Hardware probe result (1.30, 2026-08-29):** the AZ does not run `autoexec.bin`, and its only open network port is the documented PRO DJ LINK metadata channel. There is currently **no software path** that lets this toolkit execute on the player. The runtime below stays fail-closed and ready in case a future firmware exposes one. Full write-up: [docs/az-hardware-probe.md](docs/az-hardware-probe.md).
+
 ### 🔍 Safe inventory (on by default)
 
-The first stick is a probe. If Pioneer’s USB maintenance path still runs `autoexec.bin` on the AZ, you get `AZ_RUNTIME/session.txt` with architecture, mounts, the player binary and its SHA-1. If that path does not exist, the stick is ignored and the unit stays stock.
+The first stick is a probe. If Pioneer’s USB maintenance path still runs `autoexec.bin` on the AZ, you get `AZ_RUNTIME/session.txt` with architecture, mounts, the player binary and its SHA-1. On 1.30 the measured answer is that the stick is ignored and the unit stays stock — see the probe note above.
 
 ### ⏭️ Instant Hot Cue (on by default, inactive until mapped)
 
@@ -222,9 +224,11 @@ If Pioneer’s USB path ran the image, the stick now contains `AZ_RUNTIME/sessio
 The log should also say `no guarded words: rbp will not be rewritten`. That is
 the expected first run, not a failure.
 
-**Nothing happened, no `AZ_RUNTIME` folder?** The AZ may not consume
-`autoexec.bin`. The unit stayed stock. Keep the log-less stick; do not try to
-flash firmware to “make it work”.
+**Nothing happened, no `AZ_RUNTIME` folder?** That is the measured result on
+firmware `1.30`: the AZ mounts the stick as ordinary media and never runs
+`autoexec.bin`. The unit stayed stock. See
+[the hardware probe](docs/az-hardware-probe.md) for the full picture, including
+the network surface. Do not try to flash firmware to “make it work”.
 
 **Interface did not come back?** Pull the stick and power cycle — unplug the
 mains lead if you have to. The AZ boots stock.
@@ -339,10 +343,10 @@ What is being worked on next. No dates, no promises.
 
 | | What it would give you | Status |
 | --- | --- | :--: |
-| **Probe log from hardware** | A real `rbp` SHA-1 and ELF class from an AZ 1.30 | 🚧 Waiting on a first stick |
-| **Instant Hot Cue** | Skip grid wait when the deck is stopped | 🚧 Module shipped, offsets not mapped |
-| **±32 Beat Jump** | Pads 7/8 as ±32 | 💡 Planned after a mapped hash |
-| **On-device stem pads** | Slip Loop vocal / instrumental on the AZ | 💡 Planned; sidecars already generate |
+| **Probe log from hardware** | A real `rbp` SHA-1 and ELF class from an AZ 1.30 | ✅ Done — [no USB path found](docs/az-hardware-probe.md) |
+| **Instant Hot Cue** | Skip grid wait when the deck is stopped | ⛔ Blocked: no code-execution path on 1.30 |
+| **±32 Beat Jump** | Pads 7/8 as ±32 | ⛔ Blocked: same |
+| **On-device stem pads** | Slip Loop vocal / instrumental on the AZ | ⛔ Blocked: same; sidecars still generate on the computer |
 | **CPU and memory monitoring** | Headroom so heavier features stay safe | 💡 Planned |
 
 Want one of these sooner? Or something else? Say so in an issue, or build it yourself (see
@@ -354,6 +358,7 @@ Want one of these sooner? Or something else? Say so in an issue, or build it you
 
 | | |
 | --- | --- |
+| [AZ 1.30 hardware probe](docs/az-hardware-probe.md) | What a real player exposes: USB, network, update path — and the negative result |
 | [Pioneer sources and the USB key](docs/extract-initramfs.md) | Published GPL overlay, LUKS updates, why the key is not in the tarball |
 | [The AZ mod](docs/mod-rx3.md) | Architecture, modules, applying and removing, session logs |
 | [Vocal stems](docs/stem-studio.md) | Models, presets, accelerators, tuning |
